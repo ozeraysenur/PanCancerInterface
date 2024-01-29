@@ -1,0 +1,70 @@
+---
+title: "PanCancer"
+author: "Ayşe Nur Özer"
+output: html_document
+---
+
+read the data that will be use
+
+```{r}
+setwd("C:/Users/ozera/OneDrive/Belgeler/tryingData/tryingWeb/webApp/data")
+library(reader)
+allGenesIds <- readr::read_tsv("./all_genes_ids.tsv")
+head(allGenesIds)
+
+paadGenes <- readr:: read_tsv("./PAAD/DEA_paired/PAAD_degs.tsv")
+head(paadGenes)
+```
+
+Combine two data to examine genes and the values
+
+```{r}
+library(dplyr)
+
+PAAD_Combined_genes_data <- inner_join(allGenesIds,paadGenes, by ="ensembl_gene_id")
+
+head(PAAD_Combined_genes_data)
+
+```
+
+working with a small part of the combined data for better understanding
+```{r}
+
+combined_paad_splitted <- PAAD_Combined_genes_data[row.names(PAAD_Combined_genes_data) %in% 1:10, ]
+
+print(combined_paad_splitted)
+```
+
+
+putting the numeric data into a different variable to use later when creating a heatmap
+
+after that make it a matrix
+```{r}
+PAADGenes_numeric_data <- PAAD_Combined_genes_data[,5:ncol(PAAD_Combined_genes_data)]
+#head(PAADGenes_numeric_data)
+
+PAADGenes_numeric_data_matrix <- as.matrix(PAADGenes_numeric_data)
+
+```
+```{r}
+library(ggplot2)
+ggplot(combined_paad_splitted, aes(x = external_gene_name, y = t))+
+  geom_point()
+```
+
+
+```{r}
+library(pheatmap)
+
+gene_name <- PAAD_Combined_genes_data$external_gene_name
+
+stopifnot(all(rownames(PAADGenes_numeric_data_matrix) == gene_name))
+
+
+pheatmap(PAADGenes_numeric_data_matrix, 
+         cluster_rows = TRUE, 
+         cluster_cols = FALSE, 
+         col = colorRampPalette(c("blue", "white", "red"))(50), 
+         main = "Numeric Matrix Heatmap")
+```
+
